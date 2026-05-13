@@ -17,10 +17,11 @@ nav{display:flex;align-items:center;justify-content:space-between;padding:1.25re
 .card{background:#fff;border:1px solid rgba(0,0,0,0.08);border-radius:20px;padding:1.75rem;margin-bottom:1rem}
 .type-label{font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:.07em;color:#888;margin-bottom:10px}
 .type-row{display:flex;flex-wrap:wrap;gap:7px;margin-bottom:1.5rem}
-.type-chip{padding:7px 14px;font-size:13px;font-weight:500;border:1px solid rgba(0,0,0,0.15);border-radius:999px;background:transparent;color:#888;cursor:pointer;font-family:'Sora',sans-serif;transition:all .15s}
+.type-chip{padding:7px 14px;font-size:13px;font-weight:500;border:1px solid rgba(0,0,0,0.15);border-radius:999px;background:transparent;color:#888;cursor:pointer;font-family:'Sora',sans-serif}
 .type-chip.active{background:#2D5BE3;border-color:#2D5BE3;color:#fff}
 textarea{width:100%;min-height:180px;resize:vertical;padding:14px 16px;font-size:14px;line-height:1.75;border:1px solid rgba(0,0,0,0.08);border-radius:12px;background:#f7f6f2;color:#1a1a1a;font-family:'Sora',sans-serif;margin-bottom:12px}
 textarea:focus{outline:none;border-color:#2D5BE3}
+textarea::placeholder{color:#bbb}
 .decode-btn{width:100%;padding:14px;background:#2D5BE3;color:#fff;font-family:'Sora',sans-serif;font-size:15px;font-weight:600;border:none;border-radius:12px;cursor:pointer}
 .decode-btn:disabled{background:#ddd;color:#aaa;cursor:not-allowed}
 .error{display:none;margin-top:10px;font-size:13px;color:#A32D2D;padding:10px 14px;background:#FCEBEB;border-radius:10px}
@@ -49,7 +50,7 @@ footer{text-align:center;padding:2rem;font-size:13px;color:#bbb;border-top:1px s
 <nav><div class="logo">Doc<span>Plain</span></div></nav>
 <div class="hero">
   <h1>Stop being confused by official documents</h1>
-  <p>Paste any bill, letter, notice, or contract and get a plain breakdown in seconds.</p>
+  <p>Paste any bill, letter, notice, or contract and get a plain English breakdown in seconds.</p>
 </div>
 <div class="main">
   <div class="card">
@@ -63,4 +64,99 @@ footer{text-align:center;padding:2rem;font-size:13px;color:#bbb;border-top:1px s
       <button class="type-chip" data-type="Government letter">Gov letter</button>
       <button class="type-chip" data-type="Bank notice">Bank notice</button>
     </div>
-    <textarea id
+    <textarea id="docText" placeholder="Paste the confusing text here..."></textarea>
+    <button class="decode-btn" id="decodeBtn">Decode this document →</button>
+    <div class="error" id="errBox"></div>
+  </div>
+  <div class="loading" id="loading">
+    <span class="dot"></span><span class="dot"></span><span class="dot"></span>
+    <span>Reading your document...</span>
+  </div>
+  <div class="result" id="result">
+    <div class="result-section">
+      <div class="result-label">What this actually means</div>
+      <div class="result-text" id="rPlain"></div>
+    </div>
+    <div class="result-section">
+      <div class="result-label">What you need to do</div>
+      <ol class="actions-list" id="rActions"></ol>
+    </div>
+    <div class="result-section">
+      <div class="result-label">Risk level</div>
+      <div id="rRisk"></div>
+      <div style="font-size:13px;color:#888;margin-top:6px" id="rRiskReason"></div>
+    </div>
+    <div class="disclaimer">AI-generated guidance only — not legal or financial advice.</div>
+  </div>
+</div>
+<footer>© 2026 DocPlain · Powered by Claude AI</footer>
+<script>
+var selectedType = 'Any document';
+var API_KEY = 'YOUR_KEY_HERE';
+
+document.querySelectorAll('.type-chip').forEach(function(chip) {
+  chip.addEventListener('click', function() {
+    document.querySelectorAll('.type-chip').forEach(function(c) { c.classList.remove('active'); });
+    chip.classList.add('active');
+    selectedType = chip.dataset.type;
+  });
+});
+
+document.getElementById('decodeBtn').addEventListener('click', function() {
+  var text = document.getElementById('docText').value.trim();
+  var errBox = document.getElementById('errBox');
+  errBox.classList.remove('show');
+  if (!text || text.length < 30) {
+    errBox.textContent = 'Please paste more text.';
+    errBox.classList.add('show');
+    return;
+  }
+  document.getElementById('decodeBtn').disabled = true;
+  document.getElementById('loading').classList.add('show');
+  document.getElementById('result').classList.remove('show');
+
+  var prompt = 'You are a plain-English document decoder. The user pasted text from a ' + selectedType + '. Respond ONLY with valid JSON, no markdown, no backticks:\n{"plain":"2-3 sentence explanation","actions":["action 1","action 2","action 3"],"risk":"low","riskReason":"one sentence"}\n\nDocument:\n' + text.slice(0, 3000);
+
+  fetch('https://api.anthropic.com/v1/messages', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'x-api-key': API_KEY,
+      'anthropic-version': '2023-06-01'
+    },
+    body: JSON.stringify({
+      model: 'claude-sonnet-4-20250514',
+      max_tokens: 1000,
+      messages: [{ role: 'user', content: prompt }]
+    })
+  })
+  .then(function(r) { return r.json(); })
+  .then(function(d) {
+    var raw = d.content[0].text.replace(/```json|```/g,'').trim();
+    var parsed = JSON.parse(raw);
+    document.getElementById('rPlain').textContent = parsed.plain;
+    var list = document.getElementById('rActions');
+    list.innerHTML = '';
+    parsed.actions.forEach(function(a, i) {
+      var li = document.createElement('li');
+      li.className = 'action-item';
+      li.innerHTML = '<span class="action-num">' + (i+1) + '</span><span>' + a + '</span>';
+      list.appendChild(li);
+    });
+    var risk = parsed.risk || 'low';
+    document.getElementById('rRisk').innerHTML = '<span class="risk-badge ' + risk + '">' + risk.charAt(0).toUpperCase() + risk.slice(1) + ' risk</span>';
+    document.getElementById('rRiskReason').textContent = parsed.riskReason || '';
+    document.getElementById('result').classList.add('show');
+  })
+  .catch(function(e) {
+    document.getElementById('errBox').textContent = 'Error: ' + e.message;
+    document.getElementById('errBox').classList.add('show');
+  })
+  .finally(function() {
+    document.getElementById('decodeBtn').disabled = false;
+    document.getElementById('loading').classList.remove('show');
+  });
+});
+</script>
+</body>
+</html>
