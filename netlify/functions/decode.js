@@ -22,7 +22,7 @@ exports.handler = async function(event) {
         'anthropic-version': '2023-06-01'
       },
       body: JSON.stringify({
-        model: 'claude-sonnet-4-20250514',
+       model: 'claude-sonnet-4-5',
         max_tokens: 1000,
         messages: [{ role: 'user', content: 'You are a plain-English document decoder. The user pasted text from a ' + (type || 'document') + '. Respond ONLY with valid JSON, no markdown, no backticks:\n{"plain":"2-3 sentence explanation","actions":["action 1","action 2","action 3"],"risk":"low","riskReason":"one sentence"}\n\nDocument:\n' + text.slice(0, 3000) }]
       })
