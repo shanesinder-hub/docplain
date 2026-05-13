@@ -92,7 +92,7 @@ footer{text-align:center;padding:2rem;font-size:13px;color:#bbb;border-top:1px s
 <footer>© 2026 DocPlain · Powered by Claude AI</footer>
 <script>
 var selectedType = 'Any document';
-var API_KEY = 'YOUR_KEY_HERE'; 
+var KEY = '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';
 
 document.querySelectorAll('.type-chip').forEach(function(chip) {
   chip.addEventListener('click', function() {
@@ -117,11 +117,11 @@ document.getElementById('decodeBtn').addEventListener('click', function() {
 
   var prompt = 'You are a plain-English document decoder. The user pasted text from a ' + selectedType + '. Respond ONLY with valid JSON, no markdown, no backticks:\n{"plain":"2-3 sentence explanation","actions":["action 1","action 2","action 3"],"risk":"low","riskReason":"one sentence"}\n\nDocument:\n' + text.slice(0, 3000);
 
-  fetch('https://api.anthropic.com/v1/messages', {
+  fetch('https://corsproxy.io/?' + encodeURIComponent('https://api.anthropic.com/v1/messages'), {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
-      'x-api-key': API_KEY,
+      'x-api-key': KEY,
       'anthropic-version': '2023-06-01'
     },
     body: JSON.stringify({
@@ -132,6 +132,7 @@ document.getElementById('decodeBtn').addEventListener('click', function() {
   })
   .then(function(r) { return r.json(); })
   .then(function(d) {
+    if (d.error) throw new Error(d.error.message);
     var raw = d.content[0].text.replace(/```json|```/g,'').trim();
     var parsed = JSON.parse(raw);
     document.getElementById('rPlain').textContent = parsed.plain;
