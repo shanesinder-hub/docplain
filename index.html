@@ -117,8 +117,7 @@ document.getElementById('decodeBtn').addEventListener('click', function() {
 
   var prompt = 'You are a plain-English document decoder. The user pasted text from a ' + selectedType + '. Respond ONLY with valid JSON, no markdown, no backticks:\n{"plain":"2-3 sentence explanation","actions":["action 1","action 2","action 3"],"risk":"low","riskReason":"one sentence"}\n\nDocument:\n' + text.slice(0, 3000);
 
-  fetch('https://corsproxy.io/?' + encodeURIComponent('https://api.anthropic.com/v1/messages'), {
-    method: 'POST',
+fetch('https://api.allorigins.win/raw?url=' + encodeURIComponent('https://api.anthropic.com/v1/messages'), {    method: 'POST',
     headers: {
       'Content-Type': 'application/json',
       'x-api-key': KEY,
