@@ -1,0 +1,7 @@
+[build]
+  publish = "."
+
+[[redirects]]
+  from = "/api/decode"
+  to = "/.netlify/functions/decode"
+  status = 200
