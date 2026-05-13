@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>DocPlain — Understand Any Document Instantly</title>
+  <link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600&family=Lora:ital,wght@0,400;0,500;1,400&display=swap" rel="stylesheet"/>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg: #f7f6f2;
+      --white: #ffffff;
+      --border: rgba(0,0,0,0.08);
+      --border2: rgba(0,0,0,0.15);
+      --text: #1a1a1a;
+      --muted: #888;
+      --accent: #2D5BE3;
+      --accent-light: #EEF2FC;
+      --radius: 14px;
+      --amber: #854F0B;
+      --amber-bg: #FAEEDA;
+      --green: #3B6D11;
+      --green-bg: #EAF3DE;
+      --red: #A32D2D;
+      --red-bg: #FCEBEB;
+    }
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Sora', sans-serif;
+      font-size: 15px;
+      min-height: 100vh;
+    }
+
+    nav {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 1.25rem 2rem;
+      background: var(--white);
+      border-bottom: 1px solid var(--border);
+    }
+    .logo { font-family: 'Lora', serif; font-size: 20px; font-weight: 500; color: var(--text); }
+    .logo span { color: var(--accent); }
+    .nav-badge { font-size: 12px; background: var(--accent-light); color: var(--accent); padding: 5px 12px; border-radius: 999px; font-weight: 500; }
+
+    .hero { text-align: center; padding: 4rem 1.5rem 2.5rem; max-width: 600px; margin: 0 auto; }
+    .hero-tag { font-size: 12px; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; color: var(--accent); margin-bottom: 1rem; }
+    .hero h1 { font-family: 'Lora', serif; font-size: clamp(30px, 5vw, 48px); line-height: 1.15; letter-spacing: -0.5px; margin-bottom: 1rem; }
+    .hero h1 em { font-style: italic; color: var(--accent); }
+    .hero p { font-size: 16px; color: var(--muted); line-height: 1.7; max-width: 440px; margin: 0 auto; }
+
+    .main { max-width: 660px; margin: 0 auto; padding: 0 1.5rem 4rem; }
+
+    .card {
+      background: var(--white);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 1.75rem;
+      margin-bottom: 1rem;
+    }
+
+    .type-label { font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.07em; color: var(--muted); margin-bottom: 10px; }
+    .type-row { display: flex; flex-wrap: wrap; gap: 7px; margin-bottom: 1.5rem; }
+    .type-chip {
+      padding: 7px 14px; font-size: 13px; font-weight: 500;
+      border: 1px solid var(--border2); border-radius: 999px;
+      background: transparent; color: var(--muted);
+      cursor: pointer; font-family: 'Sora', sans-serif; transition: all 0.15s;
+    }
+    .type-chip:hover { color: var(--text); border-color: var(--text); }
+    .type-chip.active { background: var(--accent); border-color: var(--accent); color: white; }
+
+    textarea {
+      width: 100%; min-height: 180px; resize: vertical;
+      padding: 14px 16px; font-size: 14px; line-height: 1.75;
+      border: 1px solid var(--border); border-radius: 12px;
+      background: var(--bg); color: var(--text);
+      font-family: 'Sora', sans-serif; transition: border-color 0.15s;
+      margin-bottom: 12px;
+    }
+    textarea:focus { outline: none; border-color: var(--accent); }
+    textarea::placeholder { color: #bbb; }
+
+    .decode-btn {
+      width: 100%; padding: 14px;
+      background: var(--accent); color: white;
+      font-family: 'Sora', sans-serif; font-size: 15px; font-weight: 600;
+      border: none; border-radius: 12px; cursor: pointer;
+      transition: background 0.15s, transform 0.1s;
+    }
+    .decode-btn:hover { background: #1a40b8; }
+    .decode-btn:active { transform: scale(0.99); }
+    .decode-btn:disabled { background: #ddd; color: #aaa; cursor: not-allowed; transform: none; }
+
+    .error { display: none; margin-top: 10px; font-size: 13px; color: var(--red); padding: 10px 14px; background: var(--red-bg); border-radius: 10px; }
+    .error.show { display: block; }
+
+    .loading { display: none; align-items: center; gap: 12px; padding: 2rem 0; color: var(--muted); font-size: 14px; }
+    .loading.show { display: flex; }
+    .dots { display: flex; gap: 5px; }
+    .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--accent); animation: blink 1.2s infinite; }
+    .dot:nth-child(2) { animation-delay: 0.2s; }
+    .dot:nth-child(3) { animation-delay: 0.4s; }
+    @keyframes blink { 0%,80%,100%{opacity:0.2} 40%{opacity:1} }
+
+    .result { display: none; animation: fadein 0.3s ease; }
+    .result.show { display: block; }
+    @keyframes fadein { from{opacity:0;transform:translateY(8px)} to{opacity:1;transform:none} }
+
+    .result-section {
+      background: var(--white); border: 1px solid var(--border);
+      border-radius: 16px; padding: 1.25rem 1.5rem; margin-bottom: 10px;
+    }
+    .result-label { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); margin-bottom: 10px; }
+    .result-text { font-size: 15px; line-height: 1.8; color: var(--text); }
+
+    .actions-list { list-style: none; display: flex; flex-direction: column; gap: 10px; }
+    .action-item { display: flex; align-items: flex-start; gap: 12px; font-size: 14px; line-height: 1.65; }
+    .action-num { min-width: 24px; height: 24px; border-radius: 50%; background: var(--accent-light); color: var(--accent); font-size: 12px; font-weight: 600; display: flex; align-items: center; justify-content: center; margin-top: 1px; }
+
+    .deadline-box { background: var(--amber-bg); border: 1px solid #FAC775; border-radius: 12px; padding: 12px 16px; display: flex; align-items: center; gap: 10px; font-size: 14px; color: var(--amber); font-weight: 500; margin-bottom: 10px; }
+
+    .risk-row { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; }
+    .risk-badge { display: flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 600; padding: 8px 16px; border-radius: 999px; }
+    .risk-badge.low { background: var(--green-bg); color: var(--green); }
+    .risk-badge.medium { background: var(--amber-bg); color: var(--amber); }
+    .risk-badge.high { background: var(--red-bg); color: var(--red); }
+    .risk-reason { font-size: 13px; color: var(--muted); }
+
+    .copy-btn {
+      display: flex; align-items: center; gap: 6px;
+      background: transparent; border: 1px solid var(--border2);
+      color: var(--muted); font-size: 13px; font-weight: 500;
+      padding: 8px 16px; border-radius: 8px; cursor: pointer;
+      font-family: 'Sora', sans-serif; transition: all 0.15s;
+    }
+    .copy-btn:hover { border-color: var(--text); color: var(--text); }
+
+    .disclaimer { text-align: center; font-size: 12px; color: #bbb; margin-top: 10px; }
+
+    footer { text-align: center; padding: 2rem; font-size: 13px; color: #bbb; border-top: 1px solid var(--border); margin-top: 2rem; }
+
+    @media (max-width: 500px) {
+      nav { padding: 1rem; }
+      .hero { padding: 2.5rem 1rem 2rem; }
+      .card { padding: 1.25rem; }
+      .main { padding: 0 1rem 3rem; }
+    }
+  </style>
+</head>
+<body>
+
+<nav>
+  <div class="logo">Doc<span>Plain</span></div>
+  <div class="nav-badge">✦ AI-powered</div>
+</nav>
+
+<div class="hero">
+  <div class="hero-tag">Plain English. Instant clarity.</div>
+  <h1>Stop being confused by <em>official documents</em></h1>
+  <p>Paste any bill, letter, notice, or contract. Get a plain English breakdown, action steps, and deadlines — in seconds.</p>
+</div>
+
+<div class="main">
+  <div class="card">
+    <div class="type-label">Document type</div>
+    <div class="type-row" id="typeRow">
+      <button class="type-chip active" data-type="Any document">Any document</button>
+      <button class="type-chip" data-type="Medical bill">Medical bill</button>
+      <button class="type-chip" data-type="Lease or rental agreement">Lease</button>
+      <button class="type-chip" data-type="Legal notice">Legal notice</button>
+      <button class="type-chip" data-type="Insurance letter">Insurance</button>
+      <button class="type-chip" data-type="Government letter">Gov letter</button>
+      <button class="type-chip" data-type="Bank or credit notice">Bank notice</button>
+    </div>
+
+    <textarea id="docText" placeholder="Paste the confusing text here — a bill, letter, contract clause, notice, anything official that's hard to understand..."></textarea>
+    <button class="decode-btn" id="decodeBtn" onclick="decode()">Decode this document →</button>
+    <div class="error" id="errBox"></div>
+  </div>
+
+  <div class="loading" id="loading">
+    <div class="dots"><div class="dot"></div><div class="dot"></div><div class="dot"></div></div>
+    <span>Reading your document...</span>
+  </div>
+
+  <div class="result" id="result">
+    <div class="result-section">
+      <div class="result-label">What this actually means</div>
+      <div class="result-text" id="rPlain"></div>
+    </div>
+
+    <div class="result-section">
+      <div class="result-label">What you need to do</div>
+      <ol class="actions-list" id="rActions"></ol>
+    </div>
+
+    <div class="deadline-box" id="rDeadlineBox" style="display:none;">
+      ⏰ <span id="rDeadline"></span>
+    </div>
+
+    <div class="result-section">
+      <div class="risk-row">
+        <div>
+          <div class="result-label" style="margin-bottom:8px;">Risk level</div>
+          <div id="rRisk"></div>
+          <div class="risk-reason" id="rRiskReason" style="margin-top:6px;"></div>
+        </div>
+        <button class="copy-btn" onclick="copyResult()">&#10697; Copy summary</button>
+      </div>
+    </div>
+
+    <div class="disclaimer">AI-generated guidance only — not legal or financial advice. For serious matters, consult a professional.</div>
+  </div>
+</div>
+
+<footer>© 2026 DocPlain · Powered by Claude AI</footer>
+
+<script>
+  let selectedType = 'Any document';
+
+  document.querySelectorAll('.type-chip').forEach(chip => {
+    chip.addEventListener('click', () => {
+      document.querySelectorAll('.type-chip').forEach(c => c.classList.remove('active'));
+      chip.classList.add('active');
+      selectedType = chip.dataset.type;
+    });
+  });
+
+  async function decode() {
+    const text = document.getElementById('docText').value.trim();
+    const errBox = document.getElementById('errBox');
+    errBox.classList.remove('show');
+
+    if (!text || text.length < 30) {
+      errBox.textContent = 'Please paste at least a sentence or two from the document.';
+      errBox.classList.add('show');
+      return;
+    }
+
+    document.getElementById('decodeBtn').disabled = true;
+    document.getElementById('loading').classList.add('show');
+    document.getElementById('result').classList.remove('show');
+
+    try {
+      const res = await fetch('/api/decode', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ text, type: selectedType })
+      });
+
+      const parsed = await res.json();
+      if (!res.ok) throw new Error(parsed.error || 'Error');
+
+      document.getElementById('rPlain').textContent = parsed.plain;
+
+      const list = document.getElementById('rActions');
+      list.innerHTML = '';
+      (parsed.actions || []).forEach((a, i) => {
+        const li = document.createElement('li');
+        li.className = 'action-item';
+        li.innerHTML = `<span class="action-num">${i+1}</span><span>${a}</span>`;
+        list.appendChild(li);
+      });
+
+      const deadlineBox = document.getElementById('rDeadlineBox');
+      if (parsed.deadline) {
+        document.getElementById('rDeadline').textContent = 'Deadline: ' + parsed.deadline;
+        deadlineBox.style.display = 'flex';
+      } else {
+        deadlineBox.style.display = 'none';
+      }
+
+      const risk = parsed.risk || 'low';
+      document.getElementById('rRisk').innerHTML = `<span class="risk-badge ${risk}">${risk.charAt(0).toUpperCase()+risk.slice(1)} risk</span>`;
+      document.getElementById('rRiskReason').textContent = parsed.riskReason || '';
+
+      document.getElementById('result').classList.add('show');
+
+    } catch(err) {
+      errBox.textContent = err.message || 'Something went wrong. Please try again.';
+      errBox.classList.add('show');
+    }
+
+    document.getElementById('decodeBtn').disabled = false;
+    document.getElementById('loading').classList.remove('show');
+  }
+
+  function copyResult() {
+    const plain = document.getElementById('rPlain').textContent;
+    const actions = Array.from(document.querySelectorAll('.action-item span:last-child')).map((el,i) => `${i+1}. ${el.textContent}`).join('\n');
+    const deadline = document.getElementById('rDeadline').textContent;
+    const deadlineBox = document.getElementById('rDeadlineBox');
+    const risk = document.querySelector('.risk-badge')?.textContent || '';
+    const reason = document.getElementById('rRiskReason').textContent;
+    const full = `WHAT THIS MEANS:\n${plain}\n\nACTIONS TO TAKE:\n${actions}${deadlineBox.style.display !== 'none' ? '\n\n⏰ ' + deadline : ''}\n\nRISK: ${risk} — ${reason}`;
+    navigator.clipboard.writeText(full).catch(()=>{});
+  }
+</script>
+</body>
+</html>
