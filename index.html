@@ -115,26 +115,14 @@ document.getElementById('decodeBtn').addEventListener('click', function() {
   document.getElementById('loading').classList.add('show');
   document.getElementById('result').classList.remove('show');
 
-  var prompt = 'You are a plain-English document decoder. The user pasted text from a ' + selectedType + '. Respond ONLY with valid JSON, no markdown, no backticks:\n{"plain":"2-3 sentence explanation","actions":["action 1","action 2","action 3"],"risk":"low","riskReason":"one sentence"}\n\nDocument:\n' + text.slice(0, 3000);
-
-fetch('/.netlify/functions/decode', {
+  fetch('/.netlify/functions/decode', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ text: text, type: selectedType })
   })
-      'anthropic-version': '2023-06-01'
-    },
-    body: JSON.stringify({
-      model: 'claude-sonnet-4-20250514',
-      max_tokens: 1000,
-      messages: [{ role: 'user', content: prompt }]
-    })
-  })
   .then(function(r) { return r.json(); })
-  .then(function(d) {
-    if (d.error) throw new Error(d.error.message);
-    var raw = d.content[0].text.replace(/```json|```/g,'').trim();
-    var parsed = JSON.parse(raw);
+  .then(function(parsed) {
+    if (parsed.error) throw new Error(parsed.error);
     document.getElementById('rPlain').textContent = parsed.plain;
     var list = document.getElementById('rActions');
     list.innerHTML = '';
