@@ -95,6 +95,7 @@ footer{text-align:center;padding:2rem;font-size:13px;color:#bbb;border-top:1px s
 var selectedType = 'Any document';
 var usageCount = parseInt(localStorage.getItem('docplain_uses') || '0');
 var MAX_FREE = 2;
+
 document.querySelectorAll('.type-chip').forEach(function(chip) {
   chip.addEventListener('click', function() {
     document.querySelectorAll('.type-chip').forEach(function(c) { c.classList.remove('active'); });
@@ -113,14 +114,13 @@ document.getElementById('decodeBtn').addEventListener('click', function() {
     return;
   }
   if (usageCount >= MAX_FREE) {
-    errBox.textContent = 'You have used your 2 free decodes. Upgrade to Pro for unlimited access — $9/mo at shxne.gumroad.com/l/docplain';
+    errBox.innerHTML = 'You have used your 2 free decodes. <a href="https://shxne.gumroad.com/l/docplain" target="_blank" style="color:#A32D2D;font-weight:600;text-decoration:underline;">Upgrade to Pro — $9/mo</a>';
     errBox.classList.add('show');
     return;
   }
   document.getElementById('decodeBtn').disabled = true;
   document.getElementById('loading').classList.add('show');
   document.getElementById('result').classList.remove('show');
-
   fetch('/.netlify/functions/decode', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -143,7 +143,7 @@ document.getElementById('decodeBtn').addEventListener('click', function() {
     document.getElementById('rRiskReason').textContent = parsed.riskReason || '';
     document.getElementById('result').classList.add('show');
     usageCount++;
-localStorage.setItem('docplain_uses', usageCount);
+    localStorage.setItem('docplain_uses', usageCount);
   })
   .catch(function(e) {
     document.getElementById('errBox').textContent = 'Error: ' + e.message;
