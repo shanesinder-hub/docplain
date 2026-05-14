@@ -44,6 +44,10 @@ textarea::placeholder{color:#bbb}
 .risk-badge.medium{background:#FAEEDA;color:#854F0B}
 .risk-badge.high{background:#FCEBEB;color:#A32D2D}
 .disclaimer{text-align:center;font-size:12px;color:#bbb;margin-top:10px}
+.unlock-box{margin-top:12px;display:none}
+.unlock-box.show{display:flex;gap:8px}
+.unlock-input{flex:1;padding:10px 14px;font-size:13px;border:1px solid rgba(0,0,0,0.15);border-radius:10px;font-family:'Sora',sans-serif;background:#fff}
+.unlock-btn{padding:10px 16px;background:#2D5BE3;color:#fff;border:none;border-radius:10px;font-size:13px;font-weight:600;cursor:pointer;font-family:'Sora',sans-serif;white-space:nowrap}
 footer{text-align:center;padding:2rem;font-size:13px;color:#bbb;border-top:1px solid rgba(0,0,0,0.08);margin-top:2rem}
 </style>
 </head>
@@ -68,6 +72,10 @@ footer{text-align:center;padding:2rem;font-size:13px;color:#bbb;border-top:1px s
     <textarea id="docText" placeholder="Paste the confusing text here..."></textarea>
     <button class="decode-btn" id="decodeBtn">Decode this document →</button>
     <div class="error" id="errBox"></div>
+    <div class="unlock-box" id="unlockBox">
+      <input type="text" class="unlock-input" id="unlockInput" placeholder="Enter your unlock code"/>
+      <button class="unlock-btn" onclick="unlockPro()">Unlock</button>
+    </div>
   </div>
   <div class="loading" id="loading">
     <span class="dot"></span><span class="dot"></span><span class="dot"></span>
@@ -94,7 +102,9 @@ footer{text-align:center;padding:2rem;font-size:13px;color:#bbb;border-top:1px s
 <script>
 var selectedType = 'Any document';
 var usageCount = parseInt(localStorage.getItem('docplain_uses') || '0');
+var isPro = localStorage.getItem('docplain_pro') === 'true';
 var MAX_FREE = 2;
+var UNLOCK_CODE = 'DOCPRO2026';
 
 document.querySelectorAll('.type-chip').forEach(function(chip) {
   chip.addEventListener('click', function() {
@@ -103,6 +113,19 @@ document.querySelectorAll('.type-chip').forEach(function(chip) {
     selectedType = chip.dataset.type;
   });
 });
+
+function unlockPro() {
+  var code = document.getElementById('unlockInput').value.trim().toUpperCase();
+  if (code === UNLOCK_CODE) {
+    localStorage.setItem('docplain_pro', 'true');
+    isPro = true;
+    document.getElementById('unlockBox').classList.remove('show');
+    document.getElementById('errBox').classList.remove('show');
+    alert('You are now unlocked! Unlimited decodes activated.');
+  } else {
+    alert('Invalid code. Please check your purchase email and try again.');
+  }
+}
 
 document.getElementById('decodeBtn').addEventListener('click', function() {
   var text = document.getElementById('docText').value.trim();
@@ -113,9 +136,10 @@ document.getElementById('decodeBtn').addEventListener('click', function() {
     errBox.classList.add('show');
     return;
   }
-  if (usageCount >= MAX_FREE) {
+  if (!isPro && usageCount >= MAX_FREE) {
     errBox.innerHTML = 'You have used your 2 free decodes. <a href="https://shxne.gumroad.com/l/docplain" target="_blank" style="color:#A32D2D;font-weight:600;text-decoration:underline;">Upgrade to Pro — $9/mo</a>';
     errBox.classList.add('show');
+    document.getElementById('unlockBox').classList.add('show');
     return;
   }
   document.getElementById('decodeBtn').disabled = true;
@@ -142,8 +166,10 @@ document.getElementById('decodeBtn').addEventListener('click', function() {
     document.getElementById('rRisk').innerHTML = '<span class="risk-badge ' + risk + '">' + risk.charAt(0).toUpperCase() + risk.slice(1) + ' risk</span>';
     document.getElementById('rRiskReason').textContent = parsed.riskReason || '';
     document.getElementById('result').classList.add('show');
-    usageCount++;
-    localStorage.setItem('docplain_uses', usageCount);
+    if (!isPro) {
+      usageCount++;
+      localStorage.setItem('docplain_uses', usageCount);
+    }
   })
   .catch(function(e) {
     document.getElementById('errBox').textContent = 'Error: ' + e.message;
