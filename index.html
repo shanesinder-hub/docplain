@@ -93,7 +93,8 @@ footer{text-align:center;padding:2rem;font-size:13px;color:#bbb;border-top:1px s
 <footer>© 2026 DocPlain · Powered by Claude AI</footer>
 <script>
 var selectedType = 'Any document';
-
+var usageCount = parseInt(localStorage.getItem('docplain_uses') || '0');
+var MAX_FREE = 2;
 document.querySelectorAll('.type-chip').forEach(function(chip) {
   chip.addEventListener('click', function() {
     document.querySelectorAll('.type-chip').forEach(function(c) { c.classList.remove('active'); });
@@ -108,6 +109,11 @@ document.getElementById('decodeBtn').addEventListener('click', function() {
   errBox.classList.remove('show');
   if (!text || text.length < 30) {
     errBox.textContent = 'Please paste more text.';
+    errBox.classList.add('show');
+    return;
+  }
+  if (usageCount >= MAX_FREE) {
+    errBox.textContent = 'You have used your 2 free decodes. Upgrade to Pro for unlimited access — $9/mo at gumroad.com/l/docplain';
     errBox.classList.add('show');
     return;
   }
@@ -136,6 +142,8 @@ document.getElementById('decodeBtn').addEventListener('click', function() {
     document.getElementById('rRisk').innerHTML = '<span class="risk-badge ' + risk + '">' + risk.charAt(0).toUpperCase() + risk.slice(1) + ' risk</span>';
     document.getElementById('rRiskReason').textContent = parsed.riskReason || '';
     document.getElementById('result').classList.add('show');
+    usageCount++;
+localStorage.setItem('docplain_uses', usageCount);
   })
   .catch(function(e) {
     document.getElementById('errBox').textContent = 'Error: ' + e.message;
