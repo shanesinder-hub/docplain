@@ -1,0 +1,23 @@
+{
+  "source": "Robinhood MCP get_crypto_quotes (read-only), single snapshot",
+  "captured_at": "2026-11-05T03:03:36-05:00",
+  "routing": "Market Maker Routing",
+  "caveat": "One snapshot taken at ~03:00 US/Eastern. Spreads can vary by time of day and account routing. Collecting a 7-day spread log is the first data task (Phase 2).",
+  "quotes": [
+    {"symbol": "BTC-USD", "bid": "79592.72", "ask": "81110.1", "mark": "80351.41", "prev_close": "80436.825", "spread_pct_of_mid": 1.888},
+    {"symbol": "ETH-USD", "bid": "2393.24", "ask": "2439.10458254", "mark": "2416.17229127", "prev_close": "2422.19", "spread_pct_of_mid": 1.898},
+    {"symbol": "SOL-USD", "bid": "94.8260349", "ask": "96.6476133", "mark": "95.7368241", "prev_close": "95.97", "spread_pct_of_mid": 1.903}
+  ],
+  "regime_proxy": {
+    "source": "Robinhood MCP get_equity_historicals, IBIT weekly bars, regular session, 2025-10-27 to 2026-10-26",
+    "first_week_open": 65.375,
+    "last_week_close": 43.36,
+    "one_year_return_pct": -33.7,
+    "drawdown_from_window_high_close_pct": -30.4,
+    "realized_vol_annualized_weekly_logret_pct": 45.0,
+    "realized_vol_last_13w_annualized_pct": 46.7,
+    "sma_10w": 45.62,
+    "sma_30w": 41.34,
+    "notes": "IBIT tracks spot BTC during US hours only; it is a regime proxy, not backtest data."
+  }
+}
